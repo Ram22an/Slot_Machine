@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ReelScroll : MonoBehaviour
 {
-    [SerializeField] private float symbolHeight = 500f;
+    [SerializeField] private float symbolHeight = 200f;
     private RectTransform rt;
     private bool isScrolling = false;
     private float scrollSpeed = 0f;
@@ -10,6 +10,7 @@ public class ReelScroll : MonoBehaviour
     void Start()
     {
         rt = GetComponent<RectTransform>();
+        rt.anchoredPosition = new Vector2(0, rt.anchoredPosition.y);
     }
 
     void Update()
@@ -39,7 +40,7 @@ public class ReelScroll : MonoBehaviour
         isScrolling = false;
         float y = rt.anchoredPosition.y;
         float snappedY = Mathf.Round(y / symbolHeight) * symbolHeight;
-        rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, snappedY);
+        rt.anchoredPosition = new Vector2(0, snappedY); ;
 
     }
     public string CurrentSymbol

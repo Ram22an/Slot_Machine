@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class ReelScroll : MonoBehaviour
 {
-    [SerializeField]private float speed = 500f;
-    [SerializeField]private float symbolHeight = 200f;
-
-    RectTransform rt;
+    [SerializeField] private float symbolHeight = 500f;
+    private RectTransform rt;
+    private bool isScrolling = false;
+    private float scrollSpeed = 0f;
 
     void Start()
     {
@@ -14,13 +14,39 @@ public class ReelScroll : MonoBehaviour
 
     void Update()
     {
-        rt.anchoredPosition += Vector2.down * speed * Time.deltaTime;
-
-        if (rt.anchoredPosition.y <= -symbolHeight)
+        if (isScrolling)
         {
-            rt.anchoredPosition += new Vector2(0, symbolHeight);
-            Transform topChild = rt.GetChild(0);
-            topChild.SetAsLastSibling();
+            rt.anchoredPosition += Vector2.down * scrollSpeed * Time.deltaTime;
+
+            if (rt.anchoredPosition.y <= -symbolHeight)
+            {
+                rt.anchoredPosition += new Vector2(0, symbolHeight);
+                Transform topChild = rt.GetChild(0);
+                topChild.SetAsLastSibling();
+            }
+        }
+    }
+
+    public void StartScroll(float speed)
+    {
+        Debug.Log(gameObject.name + " is starting scroll at speed " + speed);
+        scrollSpeed = speed;
+        isScrolling = true;
+    }
+
+    public void StopScroll()
+    {
+        isScrolling = false;
+        float y = rt.anchoredPosition.y;
+        float snappedY = Mathf.Round(y / symbolHeight) * symbolHeight;
+        rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, snappedY);
+
+    }
+    public string CurrentSymbol
+    {
+        get
+        {
+            return rt.GetChild(0).name;
         }
     }
 }

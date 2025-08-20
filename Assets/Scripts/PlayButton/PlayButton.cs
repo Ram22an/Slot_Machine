@@ -1,83 +1,48 @@
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+
 public class PlayButton : MonoBehaviour
 {
-    [SerializeField] private GameObject Handle;
-    private Quaternion originalRotation, targetRotation;
-    [SerializeField] private float rotateAngle = -90f;
-    [SerializeField] private float rotateSpeed = 5f;
-    [SerializeField] private ReelScroll[] reels;
-    int[] Speed = {500, 600, 700};
-    private bool isRotating = false;
-    private void Awake()
+    [SerializeField] private Image Handle;
+    private float targetAngle = -90f;
+    private float duration = 0.5f;
+    public static event Action HandlePulled;
+    private void Start()
     {
-        originalRotation = Handle.transform.localRotation;
-        targetRotation = Quaternion.Euler(rotateAngle, 0, 0);
-        gameObject.GetComponent<Button>().onClick.AddListener(rotate);
+        GetComponent<Button>().onClick.AddListener(RotateHandleFunction);
     }
-    void rotate()
+    private void RotateHandleFunction()
     {
-        if (!isRotating) StartCoroutine(RotateHandle());
-        for (int i = 0; i < reels.Length; i++) {
-            reels[i].StartScroll(Speed[i]);
-        }
-        StartCoroutine(StopReelsSequentially(3f));
+        StartCoroutine(RotateHandle());
     }
     private IEnumerator RotateHandle()
     {
-        isRotating = true;
-        yield return RotateTo(targetRotation);
-        yield return RotateTo(originalRotation);
-        isRotating = false;
+        yield return StartCoroutine(RotateCoroutine(
+            Handle.transform.rotation,
+            Quaternion.Euler(targetAngle, 0, 0)
+        ));
+
+        yield return StartCoroutine(RotateCoroutine(
+            Handle.transform.rotation,
+            Quaternion.Euler(0, 0, 0)
+        ));
+        HandlePulled?.Invoke();
     }
-    private IEnumerator RotateTo(Quaternion target)
+
+    private IEnumerator RotateCoroutine(Quaternion startRotation, Quaternion endRotation)
     {
-        while (Quaternion.Angle(Handle.transform.localRotation, target) > 0.1f)
+        float elapsed = 0f;
+        while (elapsed < duration)
         {
-            Handle.transform.localRotation =
-                Quaternion.Lerp(Handle.transform.localRotation, target, Time.deltaTime * rotateSpeed);
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            Handle.transform.rotation = Quaternion.Lerp(startRotation, endRotation, t);
             yield return null;
         }
-        Handle.transform.localRotation = target;
-    }
-    public void CheckWin()
-    {
-        List<string> results = new List<string>();
-        foreach (var reel in reels)
-        {
-            results.Add(reel.CurrentSymbol);
-        }
-        bool allSame = true;
-        for (int i = 1; i < results.Count; i++)
-        {
-            if (results[i] != results[0])
-            {
-                allSame = false;
-                break;
-            }
-        }
 
-        if (allSame)
-        {
-            Debug.Log("WIN! Symbol: " + results[0]);
-        }
-        else
-        {
-            Debug.Log("No win this time.");
-        }
-    }
-    private IEnumerator StopReelsSequentially(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        for (int i = 0; i < reels.Length; i++)
-        {
-            reels[i].StopScroll();
-            yield return new WaitForSeconds(delay);
-        }
-        CheckWin();
+        Handle.transform.rotation = endRotation;
     }
 }
-

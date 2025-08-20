@@ -1,53 +1,88 @@
+using System.Collections;
 using UnityEngine;
 
 public class ReelScroll : MonoBehaviour
 {
-    [SerializeField] private float symbolHeight = 200f;
-    private RectTransform rt;
-    private bool isScrolling = false;
-    private float scrollSpeed = 0f;
+    private int randomValue;
+    private float timeInterval;
+
+    private bool rowStopped;
+    public string stoppedSlot;
 
     void Start()
     {
-        rt = GetComponent<RectTransform>();
-        rt.anchoredPosition = new Vector2(0, rt.anchoredPosition.y);
+        rowStopped = true;
+        PlayButton.HandlePulled += StartRotating;
     }
 
-    void Update()
+    private void StartRotating()
     {
-        if (isScrolling)
+        stoppedSlot = "";
+        StartCoroutine(Rotate());
+    }
+
+    private IEnumerator Rotate()
+    {
+        rowStopped = false;
+        timeInterval = 0.025f;
+        for (int i = 0; i < 30; i++)
         {
-            rt.anchoredPosition += Vector2.down * scrollSpeed * Time.deltaTime;
+            if (transform.position.y <= -3.5f)
+                transform.position = new Vector2(transform.position.x, 1.75f);
 
-            if (rt.anchoredPosition.y <= -symbolHeight)
-            {
-                rt.anchoredPosition += new Vector2(0, symbolHeight);
-                Transform topChild = rt.GetChild(0);
-                topChild.SetAsLastSibling();
-            }
+            transform.position = new Vector2(transform.position.x, transform.position.y - 0.25f);
+            yield return new WaitForSeconds(timeInterval);
         }
-    }
 
-    public void StartScroll(float speed)
-    {
-        Debug.Log(gameObject.name + " is starting scroll at speed " + speed);
-        scrollSpeed = speed;
-        isScrolling = true;
-    }
+        randomValue = Random.Range(60, 100);
 
-    public void StopScroll()
-    {
-        isScrolling = false;
-        float y = rt.anchoredPosition.y;
-        float snappedY = Mathf.Round(y / symbolHeight) * symbolHeight;
-        rt.anchoredPosition = new Vector2(0, snappedY); ;
-
-    }
-    public string CurrentSymbol
-    {
-        get
+        switch (randomValue % 3)
         {
-            return rt.GetChild(0).name;
+            case 1:
+                randomValue += 2;
+                break;
+            case 2:
+                randomValue += 1;
+                break;
         }
+
+        for (int i = 0; i < randomValue; i++)
+        {
+            if (transform.position.y <= -3.5f)
+                transform.position = new Vector2(transform.position.x, 1.75f);
+
+            transform.position = new Vector2(transform.position.x, transform.position.y - 0.25f);
+            if (i > Mathf.Round(randomValue * 0.5f))
+                timeInterval = 0.05f;
+            if (i > Mathf.Round(randomValue * 0.75f))
+                timeInterval = 0.1f;
+            if (i > Mathf.Round(randomValue * 0.95f))
+                timeInterval = 0.2f;
+
+            yield return new WaitForSeconds(timeInterval);
+        }
+        if (transform.position.y == -3.5f)
+            stoppedSlot = "Diamond";
+        else if (transform.position.y == -2.75f)
+            stoppedSlot = "Crown";
+        else if (transform.position.y == -2f)
+            stoppedSlot = "Melon";
+        else if (transform.position.y == -1.25f)
+            stoppedSlot = "Bar";
+        else if (transform.position.y == -0.5f)
+            stoppedSlot = "Seven";
+        else if (transform.position.y == 0.25f)
+            stoppedSlot = "Cherry";
+        else if (transform.position.y == 1f)
+            stoppedSlot = "Lemon";
+        else if (transform.position.y == 1.75f)
+            stoppedSlot = "Diamond";
+
+        rowStopped = true;
+    }
+
+    private void OnDestroy()
+    {
+        PlayButton.HandlePulled -= StartRotating;
     }
 }

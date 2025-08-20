@@ -3,82 +3,91 @@ using UnityEngine;
 
 public class ReelScroll : MonoBehaviour
 {
+    [SerializeField] private float symbolHeight = 377.5f;
+
+    [SerializeField] private string[] symbolNames = new string[4];
+
     private int randomValue;
     private float timeInterval;
+    private RectTransform rt;
 
-    private bool rowStopped;
-    public string stoppedSlot;
+    public bool RowStopped { get; private set; }
+    public string StoppedSlot { get; private set; }
+
 
     void Start()
     {
-        rowStopped = true;
+        rt = GetComponent<RectTransform>();
+        RowStopped = true;
         PlayButton.HandlePulled += StartRotating;
     }
 
     private void StartRotating()
     {
-        stoppedSlot = "";
+        StoppedSlot = "";
         StartCoroutine(Rotate());
     }
-
     private IEnumerator Rotate()
     {
-        rowStopped = false;
+        RowStopped = false;
         timeInterval = 0.025f;
-        for (int i = 0; i < 30; i++)
-        {
-            if (transform.position.y <= -3.5f)
-                transform.position = new Vector2(transform.position.x, 1.75f);
 
-            transform.position = new Vector2(transform.position.x, transform.position.y - 0.25f);
+        int stepsPerSymbol = 10;
+        float stepSize = symbolHeight / stepsPerSymbol;
+        float totalReelHeight = symbolHeight * 4;
+
+        // 1. Initial fast spin
+        for (int i = 0; i < stepsPerSymbol * 2; i++)
+        {
+            rt.anchoredPosition -= new Vector2(0, stepSize);
+            if (rt.anchoredPosition.y <= -totalReelHeight)
+            {
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, rt.anchoredPosition.y + totalReelHeight);
+            }
             yield return new WaitForSeconds(timeInterval);
         }
 
-        randomValue = Random.Range(60, 100);
-
-        switch (randomValue % 3)
-        {
-            case 1:
-                randomValue += 2;
-                break;
-            case 2:
-                randomValue += 1;
-                break;
-        }
+        int symbolSpins = Random.Range(4, 9);
+        randomValue = symbolSpins * stepsPerSymbol;
 
         for (int i = 0; i < randomValue; i++)
         {
-            if (transform.position.y <= -3.5f)
-                transform.position = new Vector2(transform.position.x, 1.75f);
+            rt.anchoredPosition -= new Vector2(0, stepSize);
+            if (rt.anchoredPosition.y <= -totalReelHeight)
+            {
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, rt.anchoredPosition.y + totalReelHeight);
+            }
 
-            transform.position = new Vector2(transform.position.x, transform.position.y - 0.25f);
-            if (i > Mathf.Round(randomValue * 0.5f))
-                timeInterval = 0.05f;
-            if (i > Mathf.Round(randomValue * 0.75f))
-                timeInterval = 0.1f;
-            if (i > Mathf.Round(randomValue * 0.95f))
-                timeInterval = 0.2f;
+            if (i > Mathf.Round(randomValue * 0.5f)) timeInterval = 0.05f;
+            if (i > Mathf.Round(randomValue * 0.75f)) timeInterval = 0.1f;
+            if (i > Mathf.Round(randomValue * 0.95f)) timeInterval = 0.2f;
 
             yield return new WaitForSeconds(timeInterval);
         }
-        if (transform.position.y == -3.5f)
-            stoppedSlot = "Diamond";
-        else if (transform.position.y == -2.75f)
-            stoppedSlot = "Crown";
-        else if (transform.position.y == -2f)
-            stoppedSlot = "Melon";
-        else if (transform.position.y == -1.25f)
-            stoppedSlot = "Bar";
-        else if (transform.position.y == -0.5f)
-            stoppedSlot = "Seven";
-        else if (transform.position.y == 0.25f)
-            stoppedSlot = "Cherry";
-        else if (transform.position.y == 1f)
-            stoppedSlot = "Lemon";
-        else if (transform.position.y == 1.75f)
-            stoppedSlot = "Diamond";
 
-        rowStopped = true;
+        float currentY = rt.anchoredPosition.y;
+        int symbolIndex = Mathf.RoundToInt(-currentY / symbolHeight);
+        float targetY = -symbolIndex * symbolHeight - (symbolHeight / 2f);
+
+        float tweenDuration = 0.2f;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < tweenDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / tweenDuration;
+
+            float newY = Mathf.SmoothStep(currentY, targetY, progress);
+            rt.anchoredPosition = new Vector2(0, newY);
+
+            yield return null;
+        }
+
+        rt.anchoredPosition = new Vector2(0, targetY);
+
+        symbolIndex = (symbolIndex % 4 + 4) % 4;
+        StoppedSlot = symbolNames[symbolIndex];
+        RowStopped = true;
     }
 
     private void OnDestroy()

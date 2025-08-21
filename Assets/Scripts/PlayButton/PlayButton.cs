@@ -20,6 +20,7 @@ public class PlayButton : MonoBehaviour
     }
     private IEnumerator RotateHandle()
     {
+        GetComponent<Button>().interactable = false;
         yield return StartCoroutine(RotateCoroutine(
             Handle.transform.rotation,
             Quaternion.Euler(targetAngle, 0, 0)
@@ -30,6 +31,7 @@ public class PlayButton : MonoBehaviour
             Quaternion.Euler(0, 0, 0)
         ));
         HandlePulled?.Invoke();
+        StartCoroutine(GetInteractableActive());
     }
 
     private IEnumerator RotateCoroutine(Quaternion startRotation, Quaternion endRotation)
@@ -44,5 +46,10 @@ public class PlayButton : MonoBehaviour
         }
 
         Handle.transform.rotation = endRotation;
+    }
+    private IEnumerator GetInteractableActive()
+    {
+        yield return new WaitForSeconds(5f);
+        GetComponent<Button>().interactable = true;
     }
 }

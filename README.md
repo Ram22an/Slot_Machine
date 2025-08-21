@@ -22,7 +22,7 @@ It features a clean user interface, engaging animations, and sound effects to cr
 ## 🚀 Instructions to Run WebGL Build  
 You can play the game directly in your browser:  
 
-🔗 [Play Slot Machine on GitHub Pages](https://ram22an.github.io/Slot_Machine/)  
+🔗 [Play Slot Machine on GitHub Pages](https://raman16.itch.io/slot-machine)  
 
 1. Open the link above.  
 2. The game will load automatically.  

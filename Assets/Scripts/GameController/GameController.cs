@@ -50,7 +50,7 @@ public class GameController : MonoBehaviour
         string result1 = reels[0].StoppedSlot;
         string result2 = reels[1].StoppedSlot;
         string result3 = reels[2].StoppedSlot;
-
+        Debug.Log(result1+" "+result2+" "+result3);
 
         if (!string.IsNullOrEmpty(result1) && result1 == result2 && result2 == result3)
         {
